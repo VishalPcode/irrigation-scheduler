@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function InputForm({ onSubmit }) {
   const now = new Date();
@@ -15,15 +15,19 @@ export default function InputForm({ onSubmit }) {
     motors: 1,
     startTime: start,
     endTime: end,
-    runtime: 5,
-    interval: 10,
+    runtime: 1,
+    interval: 1,
   });
 
-  console.log(form);
-  
+  useEffect(() => {
+    console.log("Component mounted with initial form state:", form);
+  }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const updatedForm = { ...form, [e.target.name]: e.target.value };
+    setForm(updatedForm);
+    console.log(`Field changed - ${e.target.name}:`, e.target.value);
+    console.log("Updated form state:", updatedForm);
   };
 
   const handleTimeChange = (key, value) => {
@@ -42,7 +46,10 @@ export default function InputForm({ onSubmit }) {
       selectedTime.setDate(selectedTime.getDate() + 1);
     }
 
-    setForm({ ...form, [key]: selectedTime });
+    const updatedForm = { ...form, [key]: selectedTime };
+    setForm(updatedForm);
+    console.log(`Time changed - ${key}:`, selectedTime.toString());
+    console.log("Updated form state:", updatedForm);
   };
 
   const handleSubmit = (e) => {
@@ -51,7 +58,7 @@ export default function InputForm({ onSubmit }) {
     const formatTime = (date) =>
       date.toTimeString().split(" ")[0].replace(/:/g, "").substring(0, 6);
 
-    onSubmit({
+    const submissionData = {
       ...form,
       startTime: formatTime(form.startTime),
       endTime: formatTime(form.endTime),
@@ -59,7 +66,11 @@ export default function InputForm({ onSubmit }) {
       motors: parseInt(form.motors),
       runtime: parseInt(form.runtime),
       interval: parseInt(form.interval),
-    });
+    };
+
+    console.log("Submitting form with data:", submissionData);
+
+    onSubmit(submissionData);
   };
 
   const formatLocalTime = (date) =>

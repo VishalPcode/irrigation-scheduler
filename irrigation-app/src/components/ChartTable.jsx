@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from "react";
 
-// Determine status based on current time and start/end
+const getSecondsFromTime = (t) => {
+  const hh = parseInt(t.slice(0, 2), 10);
+  const mm = parseInt(t.slice(2, 4), 10);
+  const ss = t.length >= 6 ? parseInt(t.slice(4, 6), 10) : 0;
+  return hh * 3600 + mm * 60 + ss;
+};
+
 const getStatus = (start, end) => {
   const now = new Date();
-  const getMin = (t) => parseInt(t.slice(0, 2)) * 60 + parseInt(t.slice(2, 4));
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-  const startMin = getMin(start);
-  const endMin = getMin(end);
-  if (nowMin < startMin) return "Pending";
-  if (nowMin >= startMin && nowMin <= endMin) return "In Progress";
+  const nowSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  const startSeconds = getSecondsFromTime(start);
+  const endSeconds = getSecondsFromTime(end);
+  
+  if (nowSeconds < startSeconds) return "Pending";
+  if (nowSeconds >= startSeconds && nowSeconds <= endSeconds) return "In Progress";
   return "Done";
 };
 
-// Convert HHMM string to 24-hour format
 const formatTime24 = (timeStr) => {
   const hours = timeStr.slice(0, 2);
   const minutes = timeStr.slice(2, 4);
-  return `${hours}:${minutes}`;
+  const seconds = timeStr.length >= 6 ? timeStr.slice(4, 6) : "00";
+  return `${hours}:${minutes}:${seconds}`;
 };
 
-// Tailwind styles for status
 const getStatusColor = (status) => {
   switch (status) {
     case "Done":
@@ -35,13 +40,46 @@ const getStatusColor = (status) => {
 
 export default function ChartTable({ schedule, filter }) {
   const [timeTick, setTimeTick] = useState(0);
+  const [nextCountdown, setNextCountdown] = useState(null);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeTick((prev) => prev + 1);
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
+const formatCountdown = (totalSec) => {
+  const hh = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+  const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+  const ss = String(totalSec % 60).padStart(2, "0");
+  return { hh, mm, ss };
+};
+
+ useEffect(() => {
+  const interval = setInterval(() => {
+    setTimeTick((prev) => prev + 1);
+
+    const now = new Date();
+    const nowSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+    let nextEventSec = Infinity;
+
+    for (const entry of schedule) {
+      const startSec = getSecondsFromTime(entry.startTime);
+      const endSec = getSecondsFromTime(entry.endTime);
+
+      if (nowSec < startSec) {
+        nextEventSec = Math.min(nextEventSec, startSec);
+      } else if (nowSec >= startSec && nowSec < endSec) {
+        nextEventSec = Math.min(nextEventSec, endSec);
+      }
+    }
+
+    if (nextEventSec < Infinity) {
+      const remaining = nextEventSec - nowSec;
+      setNextCountdown(formatCountdown(remaining));
+    } else {
+      setNextCountdown(null);
+    }
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [schedule]);
+
 
   const filtered = schedule.filter((entry) => {
     const status = getStatus(entry.startTime, entry.endTime);
@@ -53,6 +91,12 @@ export default function ChartTable({ schedule, filter }) {
 
   return (
     <div className="overflow-x-auto rounded-2xl bg-white p-2 shadow-lg">
+      <div className="mb-4 text-center text-lg font-semibold text-blue-700">
+        {nextCountdown
+          ? `Next update in: ${nextCountdown.hh}:${nextCountdown.mm}:${nextCountdown.ss}`
+          : "Done!"}
+      </div>
+
       <table className="min-w-full table-auto text-sm">
         <thead>
           <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
