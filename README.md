@@ -23,4 +23,4 @@ A web-based scheduling system that helps efficiently allocate irrigation tasks a
    git clone https://github.com/VishalPcode/irrigation-scheduler.git
    cd irrigation-app
    ```
-![App Screenshot](./assets/copy.png)
+
