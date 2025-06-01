@@ -1,7 +1,7 @@
 import React from "react";
 
 export default function StatusFilter({ schedule, filter, setFilter }) {
-  const plots = [...new Set(schedule.map((entry) => entry.plot))];
+  const plots = [...new Set(schedule.map((e) => e.plot))];
   const statuses = ["All", "Pending", "In Progress", "Done"];
 
   return (

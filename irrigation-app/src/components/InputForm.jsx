@@ -1,14 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 export default function InputForm({ onSubmit }) {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0);
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0);
+  const getDefaultTimes = () => {
+    const now = new Date();
+    let start = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      20,
+      0
+    );
+    let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 21, 0);
 
-  if (now > end) {
-    start.setDate(start.getDate() + 1);
-    end.setDate(end.getDate() + 1);
-  }
+    if (now > end) {
+      start.setDate(start.getDate() + 1);
+      end.setDate(end.getDate() + 1);
+    }
+    return { start, end };
+  };
+
+  const { start, end } = getDefaultTimes();
 
   const [form, setForm] = useState({
     plots: 1,
@@ -19,25 +30,20 @@ export default function InputForm({ onSubmit }) {
     interval: 1,
   });
 
-  useEffect(() => {
-    console.log("Component mounted with initial form state:", form);
-  }, []);
-
   const handleChange = (e) => {
-    const updatedForm = { ...form, [e.target.name]: e.target.value };
-    setForm(updatedForm);
-    console.log(`Field changed - ${e.target.name}:`, e.target.value);
-    console.log("Updated form state:", updatedForm);
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleTimeChange = (key, value) => {
+  const handleTimeChange = (key, timeString) => {
+    const [hours, minutes] = timeString.split(":").map(Number);
     const now = new Date();
-    const selectedTime = new Date(
+    let selectedTime = new Date(
       now.getFullYear(),
       now.getMonth(),
       now.getDate(),
-      value.getHours(),
-      value.getMinutes(),
+      hours,
+      minutes,
       0,
       0
     );
@@ -46,42 +52,38 @@ export default function InputForm({ onSubmit }) {
       selectedTime.setDate(selectedTime.getDate() + 1);
     }
 
-    const updatedForm = { ...form, [key]: selectedTime };
-    setForm(updatedForm);
-    console.log(`Time changed - ${key}:`, selectedTime.toString());
-    console.log("Updated form state:", updatedForm);
+    setForm((prev) => ({ ...prev, [key]: selectedTime }));
   };
+
+  const formatLocalTime = (date) =>
+    `${date.getHours().toString().padStart(2, "0")}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
+
+  const formatTimeForSubmit = (date) =>
+    date.toTimeString().slice(0, 8).replace(/:/g, "");
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const formatTime = (date) =>
-      date.toTimeString().split(" ")[0].replace(/:/g, "").substring(0, 6);
-
     const submissionData = {
       ...form,
-      startTime: formatTime(form.startTime),
-      endTime: formatTime(form.endTime),
-      plots: parseInt(form.plots),
-      motors: parseInt(form.motors),
-      runtime: parseInt(form.runtime),
-      interval: parseInt(form.interval),
+      plots: parseInt(form.plots, 10),
+      motors: parseInt(form.motors, 10),
+      runtime: parseInt(form.runtime, 10),
+      interval: parseInt(form.interval, 10),
+      startTime: formatTimeForSubmit(form.startTime),
+      endTime: formatTimeForSubmit(form.endTime),
     };
-
-    console.log("Submitting form with data:", submissionData);
 
     onSubmit(submissionData);
   };
 
-  const formatLocalTime = (date) =>
-    date.getHours().toString().padStart(2, "0") +
-    ":" +
-    date.getMinutes().toString().padStart(2, "0");
-
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid grid-cols-2 gap-6 mb-6 mx-auto p-4"
+      className="grid grid-cols-2 gap-6 mx-auto p-4 "
     >
       <div>
         <label htmlFor="plots" className="block font-medium mb-1 capitalize">
@@ -92,8 +94,8 @@ export default function InputForm({ onSubmit }) {
           name="plots"
           value={form.plots}
           onChange={handleChange}
-          className="border border-gray-300 rounded px-3 py-2 w-full"
           min={1}
+          className="border border-gray-300 rounded px-3 py-2 w-full"
         />
       </div>
 
@@ -106,26 +108,23 @@ export default function InputForm({ onSubmit }) {
           name="motors"
           value={form.motors}
           onChange={handleChange}
-          className="border border-gray-300 rounded px-3 py-2 w-full"
           min={1}
+          className="border border-gray-300 rounded px-3 py-2 w-full"
         />
       </div>
 
       <div>
-        <label htmlFor="startTime" className="block font-medium mb-1 capitalize">
+        <label
+          htmlFor="startTime"
+          className="block font-medium mb-1 capitalize"
+        >
           Start Time
         </label>
         <input
           type="time"
           name="startTime"
           value={formatLocalTime(form.startTime)}
-          onChange={(e) => {
-            const [hours, minutes] = e.target.value.split(":");
-            const date = new Date();
-            date.setHours(parseInt(hours));
-            date.setMinutes(parseInt(minutes));
-            handleTimeChange("startTime", date);
-          }}
+          onChange={(e) => handleTimeChange("startTime", e.target.value)}
           className="border border-gray-300 rounded px-3 py-2 w-full"
         />
       </div>
@@ -138,13 +137,7 @@ export default function InputForm({ onSubmit }) {
           type="time"
           name="endTime"
           value={formatLocalTime(form.endTime)}
-          onChange={(e) => {
-            const [hours, minutes] = e.target.value.split(":");
-            const date = new Date();
-            date.setHours(parseInt(hours));
-            date.setMinutes(parseInt(minutes));
-            handleTimeChange("endTime", date);
-          }}
+          onChange={(e) => handleTimeChange("endTime", e.target.value)}
           className="border border-gray-300 rounded px-3 py-2 w-full"
         />
       </div>
@@ -158,8 +151,8 @@ export default function InputForm({ onSubmit }) {
           name="runtime"
           value={form.runtime}
           onChange={handleChange}
-          className="border border-gray-300 rounded px-3 py-2 w-full"
           min={1}
+          className="border border-gray-300 rounded px-3 py-2 w-full"
         />
       </div>
 
@@ -172,15 +165,15 @@ export default function InputForm({ onSubmit }) {
           name="interval"
           value={form.interval}
           onChange={handleChange}
-          className="border border-gray-300 rounded px-3 py-2 w-full"
           min={1}
+          className="border border-gray-300 rounded px-3 py-2 w-full"
         />
       </div>
 
       <div className="col-span-2">
         <button
           type="submit"
-          className="pointer bg-green-500 hover:bg-green-600 text-white px-4 py-2 w-full rounded"
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 w-full rounded"
         >
           Generate Schedule
         </button>
