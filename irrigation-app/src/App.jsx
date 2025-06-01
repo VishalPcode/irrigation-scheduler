@@ -28,8 +28,8 @@ export default function App() {
 
   return (
     <div className="bg-green-100 min-h-screen">
-      <div className="p-4 max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Irrigation System Scheduler</h1>
+      <div className="p-2 max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-1">Irrigation System Scheduler</h1>
 
         <InputForm onSubmit={handleSubmit} />
 
