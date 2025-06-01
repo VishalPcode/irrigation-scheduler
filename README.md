@@ -26,4 +26,5 @@ A web-based scheduling system that helps efficiently allocate irrigation tasks a
 
 ## 🌐 Live Demo
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/YOUR-SITE-ID/deploy-status)](https://irrigation-system-scheduler.netlify.app/)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/2f765554-576f-45a5-88b8-e76faf9dc5de/deploy-status)](https://app.netlify.com/sites/irrigation-system-scheduler/deploys)
+
